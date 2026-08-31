@@ -706,13 +706,25 @@ class AboutPage extends StatelessWidget {
                     shape: BoxShape.circle,
                     border: Border.all(color: Colors.blue.shade100, width: 3),
                   ),
-                  child: const CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Color(0xFFE2E8F0),
-                    child: Icon(
-                      Icons.person,
-                      size: 60,
-                      color: Color(0xFF64748B),
+                  child: ClipOval(
+                    child: SizedBox(
+                      width: 100,
+                      height: 100,
+                      child: Image.asset(
+                        'assets/images/profile.jpg',
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const CircleAvatar(
+                            radius: 50,
+                            backgroundColor: Color(0xFFE2E8F0),
+                            child: Icon(
+                              Icons.person,
+                              size: 60,
+                              color: Color(0xFF64748B),
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ),
