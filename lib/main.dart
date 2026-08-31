@@ -11,193 +11,123 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Buku Kontak Siswa',
+      title: 'Buku Kontak',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
+        primarySwatch: Colors.blue,
         scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          centerTitle: false,
+          titleTextStyle: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+          iconTheme: IconThemeData(color: Colors.white),
+        ),
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF0F172A),
-          primary: const Color(0xFF0F172A),
+          seedColor: Colors.blue,
+          primary: Colors.blue,
           surface: Colors.white,
         ),
       ),
-      home: const ContactFormPage(),
+      home: const ContactHomePage(),
     );
   }
 }
 
+/// Model Data Kontak
 class Contact {
   String id;
   String name;
   String email;
   String phone;
   String category;
+  bool isFavorite;
 
   Contact({
     required this.id,
     required this.name,
     required this.email,
     required this.phone,
-    this.category = 'Teman Sekelas',
+    this.category = 'Teman',
+    this.isFavorite = false,
   });
 }
 
-class ContactFormPage extends StatefulWidget {
-  const ContactFormPage({super.key});
+/// Halaman Utama (Beranda) Buku Kontak
+class ContactHomePage extends StatefulWidget {
+  const ContactHomePage({super.key});
 
   @override
-  State<ContactFormPage> createState() => _ContactFormPageState();
+  State<ContactHomePage> createState() => _ContactHomePageState();
 }
 
-class _ContactFormPageState extends State<ContactFormPage> {
+class _ContactHomePageState extends State<ContactHomePage>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
 
+  // Daftar kontak awal
   List<Contact> contacts = [
+    Contact(
+      id: '1',
+      name: 'Annisa Kusumastuti',
+      email: 'nisak@gmail.com',
+      phone: '0895421903057',
+      category: 'Teman',
+      isFavorite: false,
+    ),
   ];
 
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController phoneController = TextEditingController();
-  final TextEditingController categoryController = TextEditingController();
-  final TextEditingController searchController = TextEditingController();
-
-  String searchQuery = '';
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
 
   @override
   void dispose() {
-    nameController.dispose();
-    emailController.dispose();
-    phoneController.dispose();
-    categoryController.dispose();
-    searchController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
-  void addContact() {
-    final name = nameController.text.trim();
-    final email = emailController.text.trim();
-    final phone = phoneController.text.trim();
-    final category = categoryController.text.trim();
-
-    if (name.isEmpty) {
-      _showToast('Nama lengkap harus diisi!');
-      return;
-    }
-    if (phone.isEmpty) {
-      _showToast('Nomor HP harus diisi!');
-      return;
-    }
-
-    setState(() {
-      contacts.insert(
-        0,
-        Contact(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          name: name,
-          email: email.isNotEmpty ? email : '-',
-          phone: phone,
-          category: category.isNotEmpty ? category : 'Teman',
-        ),
-      );
-    });
-
-    nameController.clear();
-    emailController.clear();
-    phoneController.clear();
-    categoryController.clear();
-    _showToast('Kontak "$name" berhasil disimpan!');
-  }
-
-  void editContact(Contact contact) {
-    final editNameController = TextEditingController(text: contact.name);
-    final editEmailController = TextEditingController(text: contact.email == '-' ? '' : contact.email);
-    final editPhoneController = TextEditingController(text: contact.phone);
-    final editCategoryController = TextEditingController(text: contact.category);
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: Color(0xFFE2E8F0)),
-          ),
-          title: const Row(
-            children: [
-              Icon(Icons.edit_note_rounded, color: Color(0xFF0F172A)),
-              SizedBox(width: 8),
-              Text(
-                'Edit Kontak',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          content: SingleChildScrollView(
-            child: SizedBox(
-              width: 360,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: editNameController,
-                    decoration: _inputDecoration('Nama Lengkap', Icons.person_outline),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: editPhoneController,
-                    keyboardType: TextInputType.phone,
-                    decoration: _inputDecoration('Nomor HP / WhatsApp', Icons.phone_outlined),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: editEmailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: _inputDecoration('Email (Opsional)', Icons.mail_outline),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: editCategoryController,
-                    decoration: _inputDecoration('Kategori / Jabatan (cth: Teman, Guru, dll)', Icons.badge_outlined),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Batal', style: TextStyle(color: Colors.grey)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0F172A),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-              onPressed: () {
-                if (editNameController.text.trim().isEmpty || editPhoneController.text.trim().isEmpty) {
-                  _showToast('Nama dan Nomor HP tidak boleh kosong');
-                  return;
-                }
-                setState(() {
-                  contact.name = editNameController.text.trim();
-                  contact.email = editEmailController.text.trim().isNotEmpty ? editEmailController.text.trim() : '-';
-                  contact.phone = editPhoneController.text.trim();
-                  contact.category = editCategoryController.text.trim().isNotEmpty ? editCategoryController.text.trim() : 'Teman';
-                });
-                Navigator.pop(context);
-                _showToast('Kontak berhasil diperbarui!');
-              },
-              child: const Text('Simpan Perubahan'),
-            ),
-          ],
-        );
-      },
+  void _showToast(String message) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: const TextStyle(color: Colors.white)),
+        backgroundColor: const Color(0xFF1E293B),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        duration: const Duration(seconds: 2),
+      ),
     );
   }
 
-  void deleteContact(Contact contact) {
+  void _addContact(Contact newContact) {
+    setState(() {
+      contacts.insert(0, newContact);
+    });
+    _showToast('Kontak "${newContact.name}" berhasil disimpan!');
+  }
+
+  void _toggleFavorite(Contact contact) {
+    setState(() {
+      contact.isFavorite = !contact.isFavorite;
+    });
+    if (contact.isFavorite) {
+      _showToast('${contact.name} ditambahkan ke Kontak Favorit');
+    } else {
+      _showToast('${contact.name} dihapus dari Kontak Favorit');
+    }
+  }
+
+  void _deleteContact(Contact contact) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -233,16 +163,89 @@ class _ContactFormPageState extends State<ContactFormPage> {
     );
   }
 
-  void _showToast(String message) {
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message, style: const TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFF0F172A),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        duration: const Duration(seconds: 2),
-      ),
+  void _editContact(Contact contact) {
+    final editNameController = TextEditingController(text: contact.name);
+    final editEmailController =
+        TextEditingController(text: contact.email == '-' ? '' : contact.email);
+    final editPhoneController = TextEditingController(text: contact.phone);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Color(0xFFE2E8F0)),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.edit_note_rounded, color: Colors.blue),
+              SizedBox(width: 8),
+              Text(
+                'Edit Kontak',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: SizedBox(
+              width: 360,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: editNameController,
+                    decoration: _inputDecoration('Nama Lengkap', Icons.person_outline),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: editPhoneController,
+                    keyboardType: TextInputType.phone,
+                    decoration: _inputDecoration('No Handphone', Icons.phone_outlined),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: editEmailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: _inputDecoration('Email (Opsional)', Icons.mail_outline),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Batal', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () {
+                if (editNameController.text.trim().isEmpty ||
+                    editPhoneController.text.trim().isEmpty) {
+                  _showToast('Nama dan Nomor HP tidak boleh kosong');
+                  return;
+                }
+                setState(() {
+                  contact.name = editNameController.text.trim();
+                  contact.email = editEmailController.text.trim().isNotEmpty
+                      ? editEmailController.text.trim()
+                      : '-';
+                  contact.phone = editPhoneController.text.trim();
+                });
+                Navigator.pop(context);
+                _showToast('Kontak berhasil diperbarui!');
+              },
+              child: const Text('Simpan Perubahan'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -254,7 +257,7 @@ class _ContactFormPageState extends State<ContactFormPage> {
   InputDecoration _inputDecoration(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: Color(0xFF475569), fontSize: 13),
+      labelStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
       prefixIcon: Icon(icon, size: 18, color: const Color(0xFF64748B)),
       filled: true,
       fillColor: Colors.white,
@@ -269,402 +272,478 @@ class _ContactFormPageState extends State<ContactFormPage> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: Color(0xFF0F172A), width: 1.5),
+        borderSide: const BorderSide(color: Colors.blue, width: 1.5),
       ),
     );
   }
 
-  List<Contact> get filteredContacts {
-    if (searchQuery.isEmpty) return contacts;
-    return contacts.where((c) {
-      final q = searchQuery.toLowerCase();
-      return c.name.toLowerCase().contains(q) ||
-          c.phone.toLowerCase().contains(q) ||
-          c.email.toLowerCase().contains(q) ||
-          c.category.toLowerCase().contains(q);
-    }).toList();
+  void _navigateToAddContact() async {
+    final newContact = await Navigator.push<Contact>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AddContactPage(),
+      ),
+    );
+
+    if (newContact != null) {
+      _addContact(newContact);
+    }
   }
 
-  Color _getCategoryColor(String category) {
-    if (category.isEmpty) return const Color(0xFF475569);
-    final hash = category.toLowerCase().codeUnits.fold<int>(0, (p, e) => p + e);
-    final colors = [
-      const Color(0xFF2563EB), 
-      const Color(0xFF7C3AED), 
-      const Color(0xFF059669), 
-      const Color(0xFFD97706), 
-      const Color(0xFFDB2777), 
-      const Color(0xFF0284C7), 
-      const Color(0xFF4F46E5), 
-      const Color(0xFF475569), 
-    ];
-    return colors[hash % colors.length];
+  void _navigateToAbout() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AboutPage(),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final list = filteredContacts;
+    final favoriteContacts = contacts.where((c) => c.isFavorite).toList();
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
-        elevation: 0,
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: const Color(0xFF0F172A),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.contacts_rounded, color: Colors.white, size: 20),
+        title: const Text('BUKU KONTAK'),
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: Colors.white,
+          indicatorWeight: 3,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          tabs: const [
+            Tab(
+              icon: Icon(Icons.contacts),
+              text: 'Kontak',
             ),
-            const SizedBox(width: 10),
-            const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Buku Kontak',
+            Tab(
+              icon: Icon(Icons.star),
+              text: 'Favorit',
+            ),
+          ],
+        ),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.blue,
+              ),
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: Text(
+                  'BUKU KONTAK',
                   style: TextStyle(
-                    fontSize: 18,
+                    color: Colors.white,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF0F172A),
                   ),
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.contacts, color: Color(0xFF334155)),
+              title: const Text('Kontak', style: TextStyle(fontWeight: FontWeight.w500)),
+              onTap: () {
+                Navigator.pop(context); // Tutup drawer
+                _tabController.animateTo(0); // Pindah ke tab Kontak
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.add, color: Color(0xFF334155)),
+              title: const Text('Tambah Kontak', style: TextStyle(fontWeight: FontWeight.w500)),
+              onTap: () {
+                Navigator.pop(context); // Tutup drawer
+                _navigateToAddContact(); // Navigasi ke Tambah Kontak
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.star, color: Color(0xFF334155)),
+              title: const Text('Favorit', style: TextStyle(fontWeight: FontWeight.w500)),
+              onTap: () {
+                Navigator.pop(context); // Tutup drawer
+                _tabController.animateTo(1); // Pindah ke tab Favorit
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.info, color: Color(0xFF334155)),
+              title: const Text('Tentang', style: TextStyle(fontWeight: FontWeight.w500)),
+              onTap: () {
+                Navigator.pop(context); // Tutup drawer
+                _navigateToAbout(); // Navigasi ke Halaman Tentang
+              },
+            ),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          // 1. Tab Kontak
+          _buildContactList(contacts, isFavoriteTab: false),
+
+          // 2. Tab Favorit
+          _buildContactList(favoriteContacts, isFavoriteTab: true),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+        onPressed: _navigateToAddContact,
+        tooltip: 'Tambah Kontak',
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildContactList(List<Contact> list, {required bool isFavoriteTab}) {
+    if (list.isEmpty) {
+      return Center(
+        child: Text(
+          isFavoriteTab ? 'Belum ada kontak favorit.' : 'Belum ada kontak',
+          style: const TextStyle(
+            fontSize: 14,
+            color: Color(0xFF64748B),
+          ),
+        ),
+      );
+    }
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 680),
+        child: ListView.builder(
+          padding: const EdgeInsets.all(16.0),
+          itemCount: list.length,
+          itemBuilder: (context, index) {
+            final contact = list[index];
+            return _buildContactCard(contact);
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContactCard(Contact contact) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x05000000),
+            blurRadius: 4,
+            offset: Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Icon Profil
+            const CircleAvatar(
+              radius: 20,
+              backgroundColor: Color(0xFFE2E8F0),
+              child: Icon(Icons.person, color: Color(0xFF64748B), size: 24),
+            ),
+            const SizedBox(width: 14),
+
+            // Detail Kontak
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    contact.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: Color(0xFF1E293B),
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  if (contact.email.isNotEmpty && contact.email != '-')
+                    Row(
+                      children: [
+                        const Icon(Icons.mail_outline, size: 13, color: Color(0xFF64748B)),
+                        const SizedBox(width: 4),
+                        Text(
+                          contact.email,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      const Icon(Icons.phone_outlined, size: 13, color: Color(0xFF64748B)),
+                      const SizedBox(width: 4),
+                      Text(
+                        contact.phone,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF334155),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      InkWell(
+                        onTap: () => _copyToClipboard(contact.phone, 'Nomor HP'),
+                        child: const Text(
+                          'Salin',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.blue,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // Aksi
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: Icon(
+                    contact.isFavorite ? Icons.star : Icons.star_border,
+                    color: contact.isFavorite ? Colors.amber : const Color(0xFF94A3B8),
+                    size: 22,
+                  ),
+                  tooltip: contact.isFavorite ? 'Hapus Favorit' : 'Jadikan Favorit',
+                  onPressed: () => _toggleFavorite(contact),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFF64748B)),
+                  tooltip: 'Edit',
+                  onPressed: () => _editContact(contact),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFFDC2626)),
+                  tooltip: 'Hapus',
+                  onPressed: () => _deleteContact(contact),
                 ),
               ],
             ),
           ],
         ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(color: const Color(0xFFE2E8F0), height: 1),
+      ),
+    );
+  }
+}
+
+/// Halaman Tambah Kontak Baru
+class AddContactPage extends StatefulWidget {
+  const AddContactPage({super.key});
+
+  @override
+  State<AddContactPage> createState() => _AddContactPageState();
+}
+
+class _AddContactPageState extends State<AddContactPage> {
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
+    super.dispose();
+  }
+
+  void _saveContact() {
+    final name = nameController.text.trim();
+    final email = emailController.text.trim();
+    final phone = phoneController.text.trim();
+
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Nama lengkap harus diisi!'),
+          backgroundColor: Color(0xFF1E293B),
+        ),
+      );
+      return;
+    }
+
+    if (phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Nomor handphone harus diisi!'),
+          backgroundColor: Color(0xFF1E293B),
+        ),
+      );
+      return;
+    }
+
+    final newContact = Contact(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: name,
+      email: email.isNotEmpty ? email : '-',
+      phone: phone,
+      category: 'Teman',
+      isFavorite: false,
+    );
+
+    Navigator.pop(context, newContact);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Tambah Kontak'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 680),
+          constraints: const BoxConstraints(maxWidth: 600),
           child: ListView(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(20.0),
             children: [
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x05000000),
-                      blurRadius: 8,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Row(
-                      children: [
-                        Icon(Icons.person_add_alt_1_rounded, size: 18, color: Color(0xFF0F172A)),
-                        SizedBox(width: 8),
-                        Text(
-                          'Tambah Kontak Baru',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF0F172A),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    TextField(
-                      controller: nameController,
-                      decoration: _inputDecoration('Nama Lengkap *', Icons.person_outline),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: phoneController,
-                      keyboardType: TextInputType.phone,
-                      decoration: _inputDecoration('No Handphone*', Icons.phone_outlined),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: _inputDecoration('Email (Opsional)', Icons.mail_outline),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: categoryController,
-                      decoration: _inputDecoration('Kategori / Jabatan (cth: Teman, Guru,)', Icons.badge_outlined),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF0F172A),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 13),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              elevation: 0,
-                            ),
-                            onPressed: addContact,
-                            icon: const Icon(Icons.save_rounded, size: 18),
-                            label: const Text(
-                              'Simpan Kontak',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF475569),
-                            side: const BorderSide(color: Color(0xFFCBD5E1)),
-                            padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          onPressed: () {
-                            nameController.clear();
-                            emailController.clear();
-                            phoneController.clear();
-                            categoryController.clear();
-                          },
-                          child: const Text('Batal'),
-                        ),
-                      ],
-                    ),
-                  ],
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Nama Lengkap',
+                  border: UnderlineInputBorder(),
                 ),
               ),
-
-              const SizedBox(height: 20),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: searchController,
-                      onChanged: (val) => setState(() => searchQuery = val),
-                      decoration: InputDecoration(
-                        hintText: 'Cari nama, no HP, atau email...',
-                        hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
-                        prefixIcon: const Icon(Icons.search_rounded, size: 18, color: Color(0xFF64748B)),
-                        suffixIcon: searchQuery.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.close, size: 16),
-                                onPressed: () {
-                                  searchController.clear();
-                                  setState(() => searchQuery = '');
-                                },
-                              )
-                            : null,
-                        filled: true,
-                        fillColor: Colors.white,
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                    ),
-                    child: Text(
-                      '${list.length} Kontak',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                        color: Color(0xFF0F172A),
-                      ),
-                    ),
-                  ),
-                ],
+              const SizedBox(height: 16),
+              TextField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  border: UnderlineInputBorder(),
+                ),
               ),
-
-              const SizedBox(height: 14),
-
-              if (list.isEmpty)
-                Container(
-                  padding: const EdgeInsets.all(32),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  child: const Center(
-                    child: Column(
-                      children: [
-                        Icon(Icons.person_search_rounded, size: 40, color: Color(0xFF94A3B8)),
-                        SizedBox(height: 10),
-                        Text(
-                          'Tidak ada kontak ditemukan',
-                          style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF475569)),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              else
-                ...list.map((contact) {
-                  final initial = contact.name.isNotEmpty ? contact.name[0].toUpperCase() : '?';
-                  final catColor = _getCategoryColor(contact.category);
-
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x03000000),
-                          blurRadius: 4,
-                          offset: Offset(0, 1),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Inisial Avatar
-                          CircleAvatar(
-                            radius: 20,
-                            backgroundColor: const Color(0xFF0F172A),
-                            child: Text(
-                              initial,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-
-                          // Info Kontak
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        contact.name,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 15,
-                                          color: Color(0xFF0F172A),
-                                        ),
-                                      ),
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: catColor.withValues(alpha: 0.1),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Text(
-                                        contact.category,
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w600,
-                                          color: catColor,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    const Icon(Icons.phone_rounded, size: 13, color: Color(0xFF64748B)),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      contact.phone,
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF334155),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    InkWell(
-                                      onTap: () => _copyToClipboard(contact.phone, 'Nomor HP'),
-                                      child: const Text(
-                                        'Salin',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: Color(0xFF2563EB),
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                if (contact.email != '-') ...[
-                                  const SizedBox(height: 2),
-                                  Row(
-                                    children: [
-                                      const Icon(Icons.mail_outline_rounded, size: 13, color: Color(0xFF64748B)),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        contact.email,
-                                        style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFF475569)),
-                                tooltip: 'Edit',
-                                onPressed: () => editContact(contact),
-                                splashRadius: 18,
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete_outline_rounded, size: 18, color: Color(0xFFDC2626)),
-                                tooltip: 'Hapus',
-                                onPressed: () => deleteContact(contact),
-                                splashRadius: 18,
-                              ),
-                            ],
-                          ),
-                        ],
+              const SizedBox(height: 16),
+              TextField(
+                controller: phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'No Handphone',
+                  border: UnderlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Center(
+                child: SizedBox(
+                  width: 120,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFE2E8F0),
+                      foregroundColor: const Color(0xFF334155),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
                       ),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
                     ),
-                  );
-                }),
+                    onPressed: _saveContact,
+                    child: const Text(
+                      'Simpan',
+                      style: TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ),
+              ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Halaman Tentang (Profil Siswa)
+class AboutPage extends StatelessWidget {
+  const AboutPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Tentang'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 500),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 30),
+                // Foto / Avatar Profil
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.blue.shade100, width: 3),
+                  ),
+                  child: const CircleAvatar(
+                    radius: 50,
+                    backgroundColor: Color(0xFFE2E8F0),
+                    child: Icon(
+                      Icons.person,
+                      size: 60,
+                      color: Color(0xFF64748B),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Albanie Setyawan',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1E293B),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'XII RPL B',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF64748B),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'SMK Negeri 5 Surakarta',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF64748B),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
