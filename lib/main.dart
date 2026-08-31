@@ -82,6 +82,14 @@ class _ContactHomePageState extends State<ContactHomePage>
       category: 'Teman',
       isFavorite: false,
     ),
+    Contact(
+      id: '2',
+      name: 'Abror Abiyyi', 
+      email: 'abror@gmail.com',
+      phone: '081234567890',
+      category: 'Teman',
+      isFavorite: true, 
+    ),
   ];
 
   @override
