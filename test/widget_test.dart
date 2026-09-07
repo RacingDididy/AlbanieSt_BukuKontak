@@ -24,6 +24,9 @@ void main() {
     expect(find.text('Abror Abiyyi'), findsOneWidget);
     expect(find.text('Tanpa kategori'), findsOneWidget);
 
+    // Verifikasi inisial nama kontak awal di CircleAvatar ('A' untuk Annisa dan Abror)
+    expect(find.descendant(of: find.byType(CircleAvatar), matching: find.text('A')), findsNWidgets(2));
+
     // 2. Navigasi ke Halaman Tambah Kontak via FAB
     await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
@@ -53,6 +56,7 @@ void main() {
     expect(find.text('Budi Santoso'), findsOneWidget);
     expect(find.text('089912345678'), findsOneWidget);
     expect(find.text('Keluarga'), findsOneWidget);
+    expect(find.descendant(of: find.byType(CircleAvatar), matching: find.text('B')), findsOneWidget);
 
     // 3. Tambah Kontak kedua tanpa mengisi Kategori (dikosongkan untuk menguji null safety)
     await tester.tap(find.byType(FloatingActionButton));
@@ -72,5 +76,6 @@ void main() {
     expect(find.text('Citra Dewi'), findsOneWidget);
     expect(find.text('087711223344'), findsOneWidget);
     expect(find.text('Tanpa kategori'), findsNWidgets(2));
+    expect(find.descendant(of: find.byType(CircleAvatar), matching: find.text('C')), findsOneWidget);
   });
 }

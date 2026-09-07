@@ -451,7 +451,31 @@ class _ContactHomePageState extends State<ContactHomePage>
     );
   }
 
-  Widget _buildContactCard(Contact contact) {
+  Color _getAvatarColor(String name) {
+    const colors = [
+      Color(0xFF2563EB), // Blue
+      Color(0xFF0D9488), // Teal
+      Color(0xFF7C3AED), // Purple
+      Color(0xFFD97706), // Amber
+      Color(0xFFE11D48), // Rose
+      Color(0xFF059669), // Emerald
+    ];
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return colors[0];
+    return colors[trimmed.codeUnitAt(0) % colors.length];
+  }
+
+  /// Widget daftar kontak (daftarKontak)
+  Widget daftarKontak(List<Kontak> list, {required bool isFavoriteTab}) {
+    return _buildContactList(list, isFavoriteTab: isFavoriteTab);
+  }
+
+  Widget _buildContactCard(Kontak contact) {
+    // Ambil inisial huruf pertama nama kontak (huruf besar)
+    final String initial = contact.name.trim().isNotEmpty
+        ? contact.name.trim()[0].toUpperCase()
+        : '?';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -471,11 +495,18 @@ class _ContactHomePageState extends State<ContactHomePage>
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Icon Profil
-            const CircleAvatar(
+            // Avatar Profil Berisi Huruf Inisial (Huruf besar)
+            CircleAvatar(
               radius: 20,
-              backgroundColor: Color(0xFFE2E8F0),
-              child: Icon(Icons.person, color: Color(0xFF64748B), size: 24),
+              backgroundColor: _getAvatarColor(contact.name),
+              child: Text(
+                initial,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
             ),
             const SizedBox(width: 14),
 
