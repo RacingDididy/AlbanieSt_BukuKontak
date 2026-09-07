@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -75,9 +76,17 @@ class ContactHomePage extends StatefulWidget {
   State<ContactHomePage> createState() => _ContactHomePageState();
 }
 
+// Alias kelas state untuk kepatuhan instruksi LKPD (_MyHomePageState)
+typedef _MyHomePageState = _ContactHomePageState;
+
 class _ContactHomePageState extends State<ContactHomePage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+
+  // StreamController untuk pencarian kontak real-time (Tugas 6)
+  final StreamController<String> _searchController =
+      StreamController<String>.broadcast();
+  final TextEditingController _searchFieldController = TextEditingController();
 
   // Daftar kontak awal
   List<Kontak> contacts = [
@@ -107,6 +116,9 @@ class _ContactHomePageState extends State<ContactHomePage>
 
   @override
   void dispose() {
+    // Tutup StreamController untuk mencegah memory leak (Tugas 6)
+    _searchController.close();
+    _searchFieldController.dispose();
     _tabController.dispose();
     super.dispose();
   }
@@ -406,8 +418,74 @@ class _ContactHomePageState extends State<ContactHomePage>
       body: TabBarView(
         controller: _tabController,
         children: [
-          // 1. Tab Kontak
-          _buildContactList(contacts, isFavoriteTab: false),
+          // 1. Tab Kontak dengan Pencarian Real-time menggunakan Stream (Tugas 6)
+          Column(
+            children: [
+              // TextField pencarian di bagian atas tab Kontak
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 680),
+                    child: TextField(
+                      controller: _searchFieldController,
+                      decoration: InputDecoration(
+                        hintText: 'Cari nama atau kategori kontak...',
+                        prefixIcon:
+                            const Icon(Icons.search, color: Color(0xFF64748B)),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide:
+                              const BorderSide(color: Color(0xFFCBD5E1)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide:
+                              const BorderSide(color: Color(0xFFE2E8F0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide:
+                              const BorderSide(color: Colors.blue, width: 1.5),
+                        ),
+                      ),
+                      onChanged: (teks) {
+                        _searchController.add(teks);
+                      },
+                    ),
+                  ),
+                ),
+              ),
+
+              // StreamBuilder untuk mendengarkan hasil pencarian real-time
+              Expanded(
+                child: StreamBuilder<String>(
+                  stream: _searchController.stream,
+                  initialData: '',
+                  builder: (context, snapshot) {
+                    final query = (snapshot.data ?? '').trim().toLowerCase();
+
+                    // Filter List<Kontak> berdasarkan nama ATAU kategori (case-insensitive)
+                    final filteredContacts = contacts.where((contact) {
+                      final nameMatch =
+                          contact.name.toLowerCase().contains(query);
+                      final categoryMatch = (contact.kategori ?? '')
+                          .toLowerCase()
+                          .contains(query);
+                      return nameMatch || categoryMatch;
+                    }).toList();
+
+                    return _buildContactList(filteredContacts,
+                        isFavoriteTab: false);
+                  },
+                ),
+              ),
+            ],
+          ),
 
           // 2. Tab Favorit
           _buildContactList(favoriteContacts, isFavoriteTab: true),
@@ -423,11 +501,15 @@ class _ContactHomePageState extends State<ContactHomePage>
     );
   }
 
-  Widget _buildContactList(List<Contact> list, {required bool isFavoriteTab}) {
+  Widget _buildContactList(List<Kontak> list, {required bool isFavoriteTab}) {
     if (list.isEmpty) {
       return Center(
         child: Text(
-          isFavoriteTab ? 'Belum ada kontak favorit.' : 'Belum ada kontak',
+          isFavoriteTab
+              ? 'Belum ada kontak favorit.'
+              : (_searchFieldController.text.trim().isNotEmpty
+                  ? 'Kontak tidak ditemukan'
+                  : 'Belum ada kontak'),
           style: const TextStyle(
             fontSize: 14,
             color: Color(0xFF64748B),

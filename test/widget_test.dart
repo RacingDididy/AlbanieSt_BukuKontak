@@ -99,5 +99,34 @@ void main() {
     expect(find.text('087711223344'), findsOneWidget);
     expect(find.text('Tanpa kategori'), findsNWidgets(2));
     expect(find.descendant(of: find.byType(CircleAvatar), matching: find.text('C')), findsOneWidget);
+
+    // 4. Pengujian Pencarian Real-time dengan Stream (Tugas 6)
+    final searchFinder = find.widgetWithText(TextField, 'Cari nama atau kategori kontak...');
+    expect(searchFinder, findsOneWidget);
+
+    // Tes Cari berdasarkan Nama ('Abror')
+    await tester.enterText(searchFinder, 'Abror');
+    await tester.pumpAndSettle();
+    expect(find.text('Abror Abiyyi'), findsOneWidget);
+    expect(find.text('Annisa Kusumastuti'), findsNothing);
+    expect(find.text('Budi Santoso'), findsNothing);
+
+    // Tes Cari berdasarkan Kategori ('Keluarga')
+    await tester.enterText(searchFinder, 'keluarga');
+    await tester.pumpAndSettle();
+    expect(find.text('Budi Santoso'), findsOneWidget);
+    expect(find.text('Abror Abiyyi'), findsNothing);
+
+    // Tes Cari kata kunci yang tidak ada ('xyz999')
+    await tester.enterText(searchFinder, 'xyz999');
+    await tester.pumpAndSettle();
+    expect(find.text('Kontak tidak ditemukan'), findsOneWidget);
+
+    // Reset pencarian (kosongkan)
+    await tester.enterText(searchFinder, '');
+    await tester.pumpAndSettle();
+    expect(find.text('Annisa Kusumastuti'), findsOneWidget);
+    expect(find.text('Abror Abiyyi'), findsOneWidget);
+    expect(find.text('Budi Santoso'), findsOneWidget);
   });
 }
