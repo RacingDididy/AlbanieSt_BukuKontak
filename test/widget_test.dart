@@ -31,21 +31,41 @@ void main() {
     await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
 
-    // Verifikasi Halaman Tambah Kontak terbuka dengan input Kategori
+    // Verifikasi Halaman Tambah Kontak terbuka dengan widget Form dan input TextFormField
     expect(find.text('Tambah Kontak'), findsOneWidget);
-    expect(find.widgetWithText(TextField, 'Nama Lengkap'), findsOneWidget);
-    expect(find.widgetWithText(TextField, 'No Handphone'), findsOneWidget);
-    expect(find.widgetWithText(TextField, 'Kategori (Opsional)'), findsOneWidget);
+    expect(find.widgetWithText(TextFormField, 'Nama Lengkap'), findsOneWidget);
+    expect(find.widgetWithText(TextFormField, 'No Handphone'), findsOneWidget);
+    expect(find.widgetWithText(TextFormField, 'Kategori (Opsional)'), findsOneWidget);
 
-    // Isi formulir kontak baru dengan kategori 'Keluarga'
+    // Tes Validasi Form: Tekan Simpan saat form masih kosong
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Simpan'));
+    await tester.pumpAndSettle();
+
+    // Verifikasi pesan error validasi muncul
+    expect(find.text('Nama wajib diisi'), findsOneWidget);
+    expect(find.text('Email wajib diisi'), findsOneWidget);
+    expect(find.text('No Handphone wajib diisi'), findsOneWidget);
+
+    // Tes Validasi Email dan No HP
     await tester.enterText(
-        find.widgetWithText(TextField, 'Nama Lengkap'), 'Budi Santoso');
+        find.widgetWithText(TextFormField, 'Nama Lengkap'), 'Budi Santoso');
     await tester.enterText(
-        find.widgetWithText(TextField, 'Email'), 'budi@gmail.com');
+        find.widgetWithText(TextFormField, 'Email'), 'email_tanpa_at');
     await tester.enterText(
-        find.widgetWithText(TextField, 'No Handphone'), '089912345678');
+        find.widgetWithText(TextFormField, 'No Handphone'), '12345');
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Simpan'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Email harus mengandung karakter @'), findsOneWidget);
+    expect(find.text('No Handphone minimal 10 digit'), findsOneWidget);
+
+    // Isi formulir kontak baru dengan data yang valid
     await tester.enterText(
-        find.widgetWithText(TextField, 'Kategori (Opsional)'), 'Keluarga');
+        find.widgetWithText(TextFormField, 'Email'), 'budi@gmail.com');
+    await tester.enterText(
+        find.widgetWithText(TextFormField, 'No Handphone'), '089912345678');
+    await tester.enterText(
+        find.widgetWithText(TextFormField, 'Kategori (Opsional)'), 'Keluarga');
     await tester.pump();
 
     // Tekan tombol Simpan
@@ -63,9 +83,11 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.enterText(
-        find.widgetWithText(TextField, 'Nama Lengkap'), 'Citra Dewi');
+        find.widgetWithText(TextFormField, 'Nama Lengkap'), 'Citra Dewi');
     await tester.enterText(
-        find.widgetWithText(TextField, 'No Handphone'), '087711223344');
+        find.widgetWithText(TextFormField, 'Email'), 'citra@gmail.com');
+    await tester.enterText(
+        find.widgetWithText(TextFormField, 'No Handphone'), '087711223344');
     // Kategori dibiarkan kosong
     await tester.pump();
 

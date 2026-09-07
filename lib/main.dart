@@ -645,6 +645,8 @@ class AddContactPage extends StatefulWidget {
 }
 
 class _AddContactPageState extends State<AddContactPage> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
@@ -660,31 +662,15 @@ class _AddContactPageState extends State<AddContactPage> {
   }
 
   void _saveContact() {
+    simpanKontak();
+  }
+
+  void simpanKontak() {
     final name = nameController.text.trim();
     final email = emailController.text.trim();
     final phone = phoneController.text.trim();
     final kategoriText = kategoriController.text.trim();
     final String? kategori = kategoriText.isNotEmpty ? kategoriText : null;
-
-    if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Nama lengkap harus diisi!'),
-          backgroundColor: Color(0xFF1E293B),
-        ),
-      );
-      return;
-    }
-
-    if (phone.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Nomor handphone harus diisi!'),
-          backgroundColor: Color(0xFF1E293B),
-        ),
-      );
-      return;
-    }
 
     final newContact = Kontak(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -711,66 +697,100 @@ class _AddContactPageState extends State<AddContactPage> {
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
-          child: ListView(
-            padding: const EdgeInsets.all(20.0),
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Nama Lengkap',
-                  border: UnderlineInputBorder(),
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              padding: const EdgeInsets.all(20.0),
+              children: [
+                TextFormField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nama Lengkap',
+                    border: UnderlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Nama wajib diisi';
+                    }
+                    return null;
+                  },
                 ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: UnderlineInputBorder(),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    border: UnderlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Email wajib diisi';
+                    }
+                    if (!value.contains('@')) {
+                      return 'Email harus mengandung karakter @';
+                    }
+                    return null;
+                  },
                 ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: 'No Handphone',
-                  border: UnderlineInputBorder(),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: phoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                    labelText: 'No Handphone',
+                    border: UnderlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'No Handphone wajib diisi';
+                    }
+                    if (!RegExp(r'^[0-9]+$').hasMatch(value.trim())) {
+                      return 'No Handphone hanya boleh angka';
+                    }
+                    if (value.trim().length < 10) {
+                      return 'No Handphone minimal 10 digit';
+                    }
+                    return null;
+                  },
                 ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: kategoriController,
-                decoration: const InputDecoration(
-                  labelText: 'Kategori (Opsional)',
-                  hintText: 'Contoh: Keluarga, Teman, Kerja',
-                  border: UnderlineInputBorder(),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: kategoriController,
+                  decoration: const InputDecoration(
+                    labelText: 'Kategori (Opsional)',
+                    hintText: 'Contoh: Keluarga, Teman, Kerja',
+                    border: UnderlineInputBorder(),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              Center(
-                child: SizedBox(
-                  width: 120,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFE2E8F0),
-                      foregroundColor: const Color(0xFF334155),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
+                const SizedBox(height: 24),
+                Center(
+                  child: SizedBox(
+                    width: 120,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFE2E8F0),
+                        foregroundColor: const Color(0xFF334155),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                    ),
-                    onPressed: _saveContact,
-                    child: const Text(
-                      'Simpan',
-                      style: TextStyle(fontWeight: FontWeight.w500),
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          simpanKontak();
+                        }
+                      },
+                      child: const Text(
+                        'Simpan',
+                        style: TextStyle(fontWeight: FontWeight.w500),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
