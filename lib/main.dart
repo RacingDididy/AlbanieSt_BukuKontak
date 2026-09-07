@@ -42,23 +42,30 @@ class MyApp extends StatelessWidget {
 }
 
 /// Model Data Kontak
-class Contact {
+class Kontak {
   String id;
   String name;
   String email;
   String phone;
-  String category;
+  String? kategori; // Nullable String?: opsional (contoh: 'Keluarga', 'Teman', 'Kerja')
   bool isFavorite;
 
-  Contact({
+  Kontak({
     required this.id,
     required this.name,
     required this.email,
     required this.phone,
-    this.category = 'Teman',
+    this.kategori, // Bersifat opsional (tidak wajib diisi saat membuat objek Kontak)
     this.isFavorite = false,
   });
+
+  // Getter & setter untuk kompatibilitas mundur
+  String? get category => kategori;
+  set category(String? value) => kategori = value;
 }
+
+// Alias typedef untuk kompatibilitas
+typedef Contact = Kontak;
 
 /// Halaman Utama (Beranda) Buku Kontak
 class ContactHomePage extends StatefulWidget {
@@ -73,21 +80,21 @@ class _ContactHomePageState extends State<ContactHomePage>
   late TabController _tabController;
 
   // Daftar kontak awal
-  List<Contact> contacts = [
-    Contact(
+  List<Kontak> contacts = [
+    Kontak(
       id: '1',
       name: 'Annisa Kusumastuti',
       email: 'nisak@gmail.com',
       phone: '0895421903057',
-      category: 'Teman',
+      kategori: 'Teman',
       isFavorite: false,
     ),
-    Contact(
+    Kontak(
       id: '2',
       name: 'Abror Abiyyi', 
       email: 'abror@gmail.com',
       phone: '081234567890',
-      category: 'Teman',
+      kategori: null, // Tanpa kategori untuk mendemonstrasikan null safety & operator ??
       isFavorite: true, 
     ),
   ];
@@ -171,11 +178,13 @@ class _ContactHomePageState extends State<ContactHomePage>
     );
   }
 
-  void _editContact(Contact contact) {
+  void _editContact(Kontak contact) {
     final editNameController = TextEditingController(text: contact.name);
     final editEmailController =
         TextEditingController(text: contact.email == '-' ? '' : contact.email);
     final editPhoneController = TextEditingController(text: contact.phone);
+    final editKategoriController =
+        TextEditingController(text: contact.kategori ?? '');
 
     showDialog(
       context: context,
@@ -218,6 +227,11 @@ class _ContactHomePageState extends State<ContactHomePage>
                     keyboardType: TextInputType.emailAddress,
                     decoration: _inputDecoration('Email (Opsional)', Icons.mail_outline),
                   ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: editKategoriController,
+                    decoration: _inputDecoration('Kategori (Opsional)', Icons.label_outline),
+                  ),
                 ],
               ),
             ),
@@ -245,6 +259,8 @@ class _ContactHomePageState extends State<ContactHomePage>
                       ? editEmailController.text.trim()
                       : '-';
                   contact.phone = editPhoneController.text.trim();
+                  final catText = editKategoriController.text.trim();
+                  contact.kategori = catText.isNotEmpty ? catText : null;
                 });
                 Navigator.pop(context);
                 _showToast('Kontak berhasil diperbarui!');
@@ -518,6 +534,41 @@ class _ContactHomePageState extends State<ContactHomePage>
                       ),
                     ],
                   ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.label_outline, size: 13, color: Color(0xFF64748B)),
+                      const SizedBox(width: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: contact.kategori != null
+                              ? const Color(0xFFEFF6FF)
+                              : const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: contact.kategori != null
+                                ? const Color(0xFFBFDBFE)
+                                : const Color(0xFFE2E8F0),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Text(
+                          contact.kategori ?? 'Tanpa kategori',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: contact.kategori != null
+                                ? const Color(0xFF1D4ED8)
+                                : const Color(0xFF64748B),
+                            fontStyle: contact.kategori == null
+                                ? FontStyle.italic
+                                : FontStyle.normal,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -566,12 +617,14 @@ class _AddContactPageState extends State<AddContactPage> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
+  final TextEditingController kategoriController = TextEditingController();
 
   @override
   void dispose() {
     nameController.dispose();
     emailController.dispose();
     phoneController.dispose();
+    kategoriController.dispose();
     super.dispose();
   }
 
@@ -579,6 +632,8 @@ class _AddContactPageState extends State<AddContactPage> {
     final name = nameController.text.trim();
     final email = emailController.text.trim();
     final phone = phoneController.text.trim();
+    final kategoriText = kategoriController.text.trim();
+    final String? kategori = kategoriText.isNotEmpty ? kategoriText : null;
 
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -600,12 +655,12 @@ class _AddContactPageState extends State<AddContactPage> {
       return;
     }
 
-    final newContact = Contact(
+    final newContact = Kontak(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       name: name,
       email: email.isNotEmpty ? email : '-',
       phone: phone,
-      category: 'Teman',
+      kategori: kategori,
       isFavorite: false,
     );
 
@@ -650,6 +705,15 @@ class _AddContactPageState extends State<AddContactPage> {
                 keyboardType: TextInputType.phone,
                 decoration: const InputDecoration(
                   labelText: 'No Handphone',
+                  border: UnderlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: kategoriController,
+                decoration: const InputDecoration(
+                  labelText: 'Kategori (Opsional)',
+                  hintText: 'Contoh: Keluarga, Teman, Kerja',
                   border: UnderlineInputBorder(),
                 ),
               ),
